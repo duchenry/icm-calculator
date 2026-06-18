@@ -70,6 +70,12 @@ export const icmFormSchema = z
       .min(1, "Calculation title is required")
       .max(100, "Calculation title is too long"),
 
+    heroSeat: z
+      .number()
+      .int("Hero seat must be a whole number")
+      .min(1, "Hero seat must be at least 1")
+      .max(10, "Hero seat cannot be greater than 10"),
+      
     players: z
       .array(playerSchema)
       .min(2, "At least 2 players are required")
@@ -84,6 +90,17 @@ export const icmFormSchema = z
     /**
      * Số payout phải bằng số player.
      */
+    const heroExists = data.players.some(
+      (player) => player.seat === data.heroSeat,
+    );
+
+    if (!heroExists) {
+      context.addIssue({
+        code: "custom",
+        path: ["heroSeat"],
+        message: "Hero seat must match an existing seat",
+      });
+    }
     if (data.players.length !== data.payouts.length) {
       context.addIssue({
         code: "custom",
@@ -172,6 +189,8 @@ export type IcmFormValues = z.infer<typeof icmFormSchema>;
  */
 export const defaultIcmFormValues: IcmFormValues = {
   title: "Final Table ICM",
+  
+  heroSeat: 1,
 
   players: [
     {

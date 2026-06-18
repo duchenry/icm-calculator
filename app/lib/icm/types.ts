@@ -32,3 +32,24 @@ export interface IcmResult {
   totalPayout: number;
   players: IcmPlayerResult[];
 }
+
+export type HeroDealRating =
+  | "very_good"
+  | "good"
+  | "fair"
+  | "weak"
+  | "poor";
+
+export interface HeroDealAnalysis {
+  seat: number;
+  stack: number;
+  chipPercentage: number;
+
+  icmDeal: number;
+  chipChop: number;
+
+  difference: number;
+  differencePercentage: number;
+
+  rating: HeroDealRating;
+}

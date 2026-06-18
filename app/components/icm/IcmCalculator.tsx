@@ -12,12 +12,14 @@ import {
   useFieldArray,
   useForm,
 } from "react-hook-form";
-import { IcmResult } from "@/app/lib/icm/types";
+import { IcmResult, HeroDealAnalysis as HeroDealAnalysisData, } from "@/app/lib/icm/types";
 import { defaultIcmFormValues, icmFormSchema, IcmFormValues } from "@/app/lib/icm/form-schema";
 import { clearIcmCalculation, loadIcmCalculation, saveIcmCalculation } from "@/app/lib/icm/storage";
 import { transformFormToIcmInput } from "@/app/lib/icm/transform";
 import { calculateIcm } from "@/app/lib/icm/engine";
 import IcmResults from "./IcmResults";
+import { calculateHeroDealAnalysis } from "@/app/lib/icm/hero-deal";
+import HeroDealAnalysis from "./HeroDealAnalysis";
 
 export default function IcmCalculator() {
   const [result, setResult] =
@@ -25,6 +27,9 @@ export default function IcmCalculator() {
 
   const [resultTitle, setResultTitle] =
     useState(defaultIcmFormValues.title);
+
+    const [heroAnalysis, setHeroAnalysis] =
+  useState<HeroDealAnalysisData | null>(null);
 
   const {
     control,
@@ -60,16 +65,33 @@ export default function IcmCalculator() {
   });
 
   useEffect(() => {
-    const savedCalculation = loadIcmCalculation();
+  const savedCalculation = loadIcmCalculation();
 
-    if (!savedCalculation) {
-      return;
-    }
+  if (!savedCalculation) {
+    return;
+  }
 
-    reset(savedCalculation.formValues);
-    setResult(savedCalculation.result);
-    setResultTitle(savedCalculation.formValues.title);
-  }, [reset]);
+  const heroSeat =
+    savedCalculation.formValues.heroSeat ??
+    defaultIcmFormValues.heroSeat;
+
+  const restoredFormValues = {
+    ...savedCalculation.formValues,
+    heroSeat,
+  };
+
+  reset(restoredFormValues);
+
+  setResult(savedCalculation.result);
+  setResultTitle(restoredFormValues.title);
+
+  setHeroAnalysis(
+    calculateHeroDealAnalysis(
+      savedCalculation.result,
+      heroSeat,
+    ),
+  );
+}, [reset]);
 
   function handleAddPlayer() {
     if (playerFields.length >= 10) {
@@ -123,6 +145,7 @@ export default function IcmCalculator() {
     reset(defaultIcmFormValues);
 
     setResult(null);
+    setHeroAnalysis(null);
     setResultTitle(defaultIcmFormValues.title);
   }
 
@@ -132,7 +155,14 @@ export default function IcmCalculator() {
 
     const icmResult = calculateIcm(icmInput);
 
+    const dealAnalysis =
+      calculateHeroDealAnalysis(
+        icmResult,
+        values.heroSeat,
+      );
+
     setResult(icmResult);
+    setHeroAnalysis(dealAnalysis);
     setResultTitle(values.title);
 
     saveIcmCalculation(values, icmResult);
@@ -318,25 +348,61 @@ export default function IcmCalculator() {
           </div>
 
           <section className="mt-4 rounded-xl border border-slate-800 bg-slate-900 p-4 sm:mt-6 sm:rounded-2xl sm:p-5">
-            <label
-              htmlFor="title"
-              className="mb-2 block text-sm font-medium text-slate-300"
-            >
-              Calculation title
-            </label>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label
+                  htmlFor="heroSeat"
+                  className="mb-2 block text-sm font-medium text-slate-300"
+                >
+                  Hero seat
+                </label>
 
-            <input
-              id="title"
-              type="text"
-              {...register("title")}
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 text-sm outline-none transition focus:border-emerald-500"
-            />
+                <select
+                  id="heroSeat"
+                  {...register("heroSeat", {
+                    valueAsNumber: true,
+                  })}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 text-sm outline-none transition focus:border-emerald-500"
+                >
+                  {playerFields.map((_, index) => (
+                    <option
+                      key={index + 1}
+                      value={index + 1}
+                    >
+                      Seat {index + 1}
+                    </option>
+                  ))}
+                </select>
 
-            {errors.title && (
-              <p className="mt-1 text-sm text-red-400">
-                {errors.title.message}
-              </p>
-            )}
+                {errors.heroSeat && (
+                  <p className="mt-1 text-sm text-red-400">
+                    {errors.heroSeat.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="title"
+                  className="mb-2 block text-sm font-medium text-slate-300"
+                >
+                  Calculation title
+                </label>
+
+                <input
+                  id="title"
+                  type="text"
+                  {...register("title")}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 text-sm outline-none transition focus:border-emerald-500"
+                />
+
+                {errors.title && (
+                  <p className="mt-1 text-sm text-red-400">
+                    {errors.title.message}
+                  </p>
+                )}
+              </div>
+            </div>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]">
               <button
@@ -365,6 +431,10 @@ export default function IcmCalculator() {
             result={result}
             title={resultTitle}
           />
+        )}
+
+        {heroAnalysis && (
+          <HeroDealAnalysis analysis={heroAnalysis} />
         )}
       </div>
     </main>
