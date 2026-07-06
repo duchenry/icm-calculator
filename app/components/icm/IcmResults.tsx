@@ -117,100 +117,8 @@ export default function IcmResults({
         />
       </div>
 
-      <div className="space-y-3 lg:hidden">
-        {result.players.map((player) => (
-          <article
-            key={player.seat}
-            className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900"
-          >
-            <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
-              <div className="flex items-center gap-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-800">
-                  <Trophy
-                    size={17}
-                    className="text-emerald-400"
-                  />
-                </div>
-
-                <div>
-                  <p className="font-semibold text-white">
-                    Seat {player.seat}
-                  </p>
-
-                  <p className="text-xs text-slate-500">
-                    Stack{" "}
-                    {numberFormatter.format(
-                      player.stack,
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <div className="text-right">
-                <p className="text-xs text-slate-500">
-                  ICM equity
-                </p>
-
-                <p className="text-lg font-bold text-emerald-400">
-                  {numberFormatter.format(
-                    player.equity,
-                  )}
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 divide-x divide-slate-800 border-b border-slate-800">
-              <Metric
-                label="Chip share"
-                value={`${formatPercentage(
-                  player.chipPercentage,
-                )}%`}
-              />
-
-              <Metric
-                label="Equity share"
-                value={`${formatPercentage(
-                  player.equityPercentage,
-                )}%`}
-              />
-            </div>
-
-            <div className="p-4">
-              <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-500">
-                Finish probability
-              </p>
-
-              <div className="grid grid-cols-3 gap-2">
-                {player.finishProbabilities.map(
-                  ({ place, probability }) => (
-                    <div
-                      key={place}
-                      className="rounded-lg bg-slate-950 px-2 py-3 text-center"
-                    >
-                      <p className="text-xs text-slate-500">
-                        {place}
-                        {getOrdinalSuffix(place)}
-                      </p>
-
-                      <p className="mt-1 text-sm font-semibold text-slate-200">
-                        {formatPercentage(
-                          probability,
-                        )}
-                        %
-                      </p>
-                    </div>
-                  ),
-                )}
-              </div>
-            </div>
-          </article>
-        ))}
-      </div>
-
-      <div className="hidden overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 lg:block">
-        <div className="overflow-x-auto">
-          <ResultsTable result={result} />
-        </div>
+      <div className="w-full min-w-0 max-w-full overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
+        <ResultsTable result={result} />
       </div>
 
       <div
@@ -278,30 +186,35 @@ interface ResultsTableProps {
 function ResultsTable({
   result,
 }: ResultsTableProps) {
+  const places =
+    result.players[0]?.finishProbabilities ?? [];
+
   return (
-    <table className="min-w-full border-collapse text-sm">
-      <thead>
-        <tr className="border-b border-slate-700 text-left text-xs uppercase tracking-wide text-slate-500">
-          <th className="px-4 py-4">Seat</th>
+    <div className="w-full min-w-0 max-w-[calc(100vw-2rem)] overflow-x-auto overscroll-x-contain sm:max-w-full">
+      <table className="w-[760px] border-collapse text-sm md:w-full">
+        <thead>
+          <tr className="border-b border-slate-700 text-left text-xs uppercase tracking-wide text-slate-500">
+            <th className="px-4 py-4 text-left">
+              Seat
+            </th>
 
-          <th className="px-4 py-4 text-right">
-            Stack
-          </th>
+            <th className="px-4 py-4 text-right">
+              Stack
+            </th>
 
-          <th className="px-4 py-4 text-right">
-            Chip %
-          </th>
+            <th className="px-4 py-4 text-right">
+              Chip %
+            </th>
 
-          <th className="px-4 py-4 text-right">
-            ICM equity
-          </th>
+            <th className="px-4 py-4 text-right">
+              ICM equity
+            </th>
 
-          <th className="px-4 py-4 text-right">
-            Equity %
-          </th>
+            <th className="px-4 py-4 text-right">
+              Equity %
+            </th>
 
-          {result.players[0]?.finishProbabilities.map(
-            ({ place }) => (
+            {places.map(({ place }) => (
               <th
                 key={place}
                 className="px-4 py-4 text-right"
@@ -309,61 +222,57 @@ function ResultsTable({
                 {place}
                 {getOrdinalSuffix(place)}
               </th>
-            ),
-          )}
-        </tr>
-      </thead>
-
-      <tbody>
-        {result.players.map((player) => (
-          <tr
-            key={player.seat}
-            className="border-b border-slate-800 last:border-0"
-          >
-            <td className="px-4 py-5 font-semibold text-white">
-              Seat {player.seat}
-            </td>
-
-            <td className="px-4 py-5 text-right text-slate-300">
-              {numberFormatter.format(
-                player.stack,
-              )}
-            </td>
-
-            <td className="px-4 py-5 text-right text-slate-300">
-              {formatPercentage(
-                player.chipPercentage,
-              )}
-              %
-            </td>
-
-            <td className="px-4 py-5 text-right text-lg font-bold text-emerald-400">
-              {numberFormatter.format(
-                player.equity,
-              )}
-            </td>
-
-            <td className="px-4 py-5 text-right text-slate-300">
-              {formatPercentage(
-                player.equityPercentage,
-              )}
-              %
-            </td>
-
-            {player.finishProbabilities.map(
-              ({ place, probability }) => (
-                <td
-                  key={place}
-                  className="px-4 py-5 text-right text-slate-400"
-                >
-                  {formatPercentage(probability)}%
-                </td>
-              ),
-            )}
+            ))}
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+
+        <tbody>
+          {result.players.map((player) => (
+            <tr
+              key={player.seat}
+              className="border-b border-slate-800 last:border-0"
+            >
+              <td className="px-4 py-5 font-semibold text-white">
+                Seat {player.seat}
+              </td>
+
+              <td className="px-4 py-5 text-right text-slate-300">
+                {numberFormatter.format(player.stack)}
+              </td>
+
+              <td className="px-4 py-5 text-right text-slate-300">
+                {formatPercentage(
+                  player.chipPercentage,
+                )}
+                %
+              </td>
+
+              <td className="px-4 py-5 text-right text-lg font-bold text-emerald-400">
+                {numberFormatter.format(player.equity)}
+              </td>
+
+              <td className="px-4 py-5 text-right text-slate-300">
+                {formatPercentage(
+                  player.equityPercentage,
+                )}
+                %
+              </td>
+
+              {player.finishProbabilities.map(
+                ({ place, probability }) => (
+                  <td
+                    key={place}
+                    className="px-4 py-5 text-right text-slate-400"
+                  >
+                    {formatPercentage(probability)}%
+                  </td>
+                ),
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
